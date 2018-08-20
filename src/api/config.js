@@ -1,6 +1,6 @@
-export const commonParam = {
-  g_tk: 712238576,
-  format: 'json',
+export const commonParams = {
+  g_tk: 5381,
+  format: 'jsonp',
   inCharset: 'utf-8',
   outCharset: 'utf-8',
   notice: 0
