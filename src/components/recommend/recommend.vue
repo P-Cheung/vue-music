@@ -1,30 +1,37 @@
 <template>
   <div class="recommend">
-    <div class="recommend-content">
-      <div class="slider-wrapper" v-if="recommends.length">
-        <slider>
-          <div v-for="item in recommends" :key="item.id">
-            <a :href="item.linkUrl">
-              <img :src="item.picUrl">
-            </a>
+    <scroll ref="scroll" class="recommend-content" :data="disclist">
+      <div>
+        <div class="slider-wrapper" v-if="recommends.length">
+          <div class="slider-content">
+            <slider>
+              <div v-for="item in recommends" :key="item.id">
+                <a :href="item.linkUrl">
+                  <img @load="loadImage" :src="item.picUrl">
+                </a>
+              </div>
+            </slider>
           </div>
-        </slider>
+        </div>
+        <div class="recommend-list">
+          <h1 class="list-title">热门歌单推荐</h1>
+          <ul>
+            <li v-for="item in disclist" :key="item.dissid" class="item">
+              <div class="icon">
+                <img v-lazy="item.imgurl" width="60" height="60">
+              </div>
+              <div class="text">
+                <h2 class="name">{{item.creator.name}}</h2>
+                <p class="desc">{{item.dissname}}</p>
+              </div>
+            </li>
+          </ul>
+        </div>
       </div>
-      <div class="recommend-list">
-        <h1 class="list-title">热门歌单推荐</h1>
-        <ul>
-          <li v-for="item in disclist" :key="item.dissid" class="item">
-            <div class="icon">
-              <img :src="item.imgurl" width="60" height="60">
-            </div>
-            <div class="text">
-              <h2 class="name">{{item.creator.name}}</h2>
-              <p class="desc">{{item.dissname}}</p>
-            </div>
-          </li>
-        </ul>
+      <div class="loading-container" v-show="!disclist.length">
+        <loading></loading>
       </div>
-    </div>
+    </scroll>
   </div>
 </template>
 
@@ -32,6 +39,8 @@
 import {getRecommend, getDiscList} from '@/api/recommend'
 import {ERR_OK} from '@/api/config'
 import Slider from '@/base/slider/slider'
+import Scroll from '@/base/scroll/scroll'
+import Loading from '@/base/loading/loading'
 
 export default {
   name: 'Recommend',
@@ -42,7 +51,9 @@ export default {
     }
   },
   components: {
-    Slider
+    Slider,
+    Scroll,
+    Loading
   },
   created () {
     this._getRecommend()
@@ -62,6 +73,12 @@ export default {
           this.disclist = res.data.list
         }
       })
+    },
+    loadImage () {
+      if (!this.checkloaded) { // 保证只执行一次
+        this.$refs.scroll.refresh()
+        this.checkloaded = true
+      }
     }
   }
 }
@@ -81,6 +98,14 @@ export default {
         position: relative
         width: 100%
         overflow: hidden
+        height: 0
+        padding-top: 40%
+        .slider-content
+          position: absolute
+          top: 0
+          left: 0
+          width: 100%
+          height: 100%
       .recommend-list
         .list-title
           height: 65px

@@ -2,12 +2,16 @@ import 'babel-polyfill'
 import Vue from 'vue'
 import App from './App'
 import router from './router'
-import fastClick from 'fastclick'
+import fastclick from 'fastclick'
 import '@/common/stylus/index.styl'
+import VueLazyLoad from 'vue-lazyload'
 
 Vue.config.productionTip = false
-fastClick.attach(document.body)
+fastclick.attach(document.body)
 
+Vue.use(VueLazyLoad, {
+  loading: require('@/common/images/default.png')
+})
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
