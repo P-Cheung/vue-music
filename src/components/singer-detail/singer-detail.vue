@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import {mapGetters} from 'vuex'
+import {mapState} from 'vuex'
 import {getSingerDetail, getSongVkey} from '@/api/singer'
 import {ERR_OK} from '@/api/config'
 import {createSong} from '@/common/js/song'
@@ -27,7 +27,7 @@ export default {
     bgImage () {
       return this.singer.avatar
     },
-    ...mapGetters([
+    ...mapState([
       'singer'
     ])
   },
