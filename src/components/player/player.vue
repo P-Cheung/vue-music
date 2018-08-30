@@ -21,7 +21,7 @@
           <div class="middle-l">
             <div class="cd-wrapper" ref="cdWrapper">
               <div class="cd">
-                <img class="image" :src="currentSong.image">
+                <img class="image" :class="cdCls" :src="currentSong.image">
               </div>
             </div>
           </div>
@@ -31,13 +31,13 @@
             <div class="icon i-left">
               <i class="icon-sequence"></i>
             </div>
-            <div class="icon i-left">
+            <div class="icon i-left" @click="prev" :class="disableCls">
               <i class="icon-prev"></i>
             </div>
-            <div class="icon i-center">
-              <i class="icon-play"></i>
+            <div class="icon i-center" @click="togglePlaying" :class="disableCls">
+              <i :class="playIcon"></i>
             </div>
-            <div class="icon i-right">
+            <div class="icon i-right" @click="next" :class="disableCls">
               <i class="icon-next"></i>
             </div>
             <div class="icon i-right">
@@ -51,19 +51,22 @@
       <div class="mini-player" v-show="!fullScreen" @click="open">
         <div class="icon">
           <div class="imgWrapper">
-            <img width="40" height="40" :src="currentSong.image">
+            <img :class="cdCls" width="40" height="40" :src="currentSong.image">
           </div>
         </div>
         <div class="text">
           <h2 class="name">{{currentSong.name}}</h2>
           <p class="desc">{{currentSong.singer}}</p>
         </div>
-        <div class="control"></div>
+        <div class="control" @click.stop="togglePlaying">
+          <i :class="miniIcon"></i>
+        </div>
         <div class="control">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
+    <audio :src="currentSong.url" ref="audio" @canplay="ready" @error="error"></audio>
   </div>
 </template>
 
@@ -75,18 +78,39 @@ import {prefixStyle} from '@/common/js/dom'
 const transform = prefixStyle('transform')
 
 export default {
+  data () {
+    return {
+      songReady: false
+    }
+  },
   computed: {
     ...mapState([
       'playlist',
-      'fullScreen'
+      'fullScreen',
+      'playing',
+      'currentIndex'
     ]),
     ...mapGetters([
       'currentSong'
-    ])
+    ]),
+    playIcon () {
+      return this.playing ? 'icon-pause' : 'icon-play'
+    },
+    miniIcon () {
+      return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
+    },
+    cdCls () {
+      return this.playing ? 'play' : 'play pause'
+    },
+    disableCls () {
+      return this.songReady ? '' : 'disable'
+    }
   },
   methods: {
     ...mapMutations({
-      setFullScreen: 'SET_FULLSCREEN'
+      setFullScreen: 'SET_FULLSCREEN',
+      setPlayingState: 'SET_PLAYING_STATE',
+      setCurrentIndex: 'SET_CURRENT_INDEX'
     }),
     back () {
       this.setFullScreen(false)
@@ -137,6 +161,46 @@ export default {
       this.$refs.cdWrapper.style.transition = ''
       this.$refs.cdWrapper.style[transform] = ''
     },
+    togglePlaying () {
+      if (!this.songReady) {
+        return
+      }
+      this.setPlayingState(!this.playing)
+    },
+    next () {
+      if (!this.songReady) {
+        return
+      }
+      let index = this.currentIndex + 1
+      if (index === this.playlist.length) {
+        index = 0
+      }
+      this.setCurrentIndex(index)
+      if (!this.playing) {
+        this.togglePlaying()
+      }
+      this.songReady = false
+    },
+    prev () {
+      if (!this.songReady) {
+        return
+      }
+      let index = this.currentIndex - 1
+      if (index === -1) {
+        index = this.playlist.length - 1
+      }
+      this.setCurrentIndex(index)
+      if (!this.playing) {
+        this.togglePlaying()
+      }
+      this.songReady = false
+    },
+    ready () {
+      this.songReady = true
+    },
+    error () {
+      this.songReady = true
+    },
     _getPosAndScale () {
       const targetWidth = 40
       const paddingLeft = 40
@@ -149,6 +213,19 @@ export default {
       const y = window.innerHeight - paddingTop - width / 2 - paddingBottom
 
       return {x, y, scale}
+    }
+  },
+  watch: {
+    currentSong () {
+      this.$nextTick(() => {
+        this.$refs.audio.play()
+      })
+    },
+    playing (newValue) {
+      let audio = this.$refs.audio
+      this.$nextTick(() => {
+        newValue ? audio.play() : audio.pause()
+      })
     }
   }
 }
@@ -239,6 +316,8 @@ export default {
                 border: 10px solid rgba(255, 255, 255, 0.1)
               .play
                 animation: rotate 20s linear infinite
+              .pause
+                animation-play-state: paused
           .playing-lyric-wrapper
             width: 80%
             margin: 30px auto 0 auto
