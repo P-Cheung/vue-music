@@ -55,7 +55,10 @@ export default {
       this.touch.initiated = false
     },
     progressClick (e) {
-      this._offset(e.offsetX - btnWidth / 2)
+      let rect = this.$refs.progressBar.getBoundingClientRect()
+      let offsetX = e.pageX - rect.left - btnWidth / 2
+      this._offset(offsetX)
+      // this._offset(e.offsetX - btnWidth / 2) // offsetX是相对事件源的距离，当点击progressBtn时获取不对
       this._triggerPercent()
     },
     _offset (offsetX) {
