@@ -27,6 +27,16 @@
           </div>
         </div>
         <div class="bottom">
+          <div class="progress-wrapper">
+            <span class="time time-l">{{format(currentTime)}}</span>
+            <div class="progress-bar-wrapper">
+              <progress-bar :percent="percent"
+                @progressChange="onProgressChange"
+              >
+              </progress-bar>
+            </div>
+            <span class="time time-r">{{format(currentSong.duration)}}</span>
+          </div>
           <div class="operators">
             <div class="icon i-left">
               <i class="icon-sequence"></i>
@@ -59,14 +69,23 @@
           <p class="desc">{{currentSong.singer}}</p>
         </div>
         <div class="control" @click.stop="togglePlaying">
-          <i :class="miniIcon"></i>
+          <progress-circle :radius="radius" :percent="percent">
+            <i :class="miniIcon" class="icon-mini"></i>
+          </progress-circle>
         </div>
         <div class="control">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
-    <audio :src="currentSong.url" ref="audio" @canplay="ready" @error="error"></audio>
+    <audio
+      :src="currentSong.url"
+      ref="audio"
+      @canplay="ready"
+      @error="error"
+      @timeupdate="updateTime"
+    >
+    </audio>
   </div>
 </template>
 
@@ -74,14 +93,22 @@
 import {mapState, mapGetters, mapMutations} from 'vuex'
 import animations from 'create-keyframe-animation'
 import {prefixStyle} from '@/common/js/dom'
+import ProgressBar from '@/base/progress-bar/progress-bar'
+import ProgressCircle from '@/base/progress-circle/progress-circle'
 
 const transform = prefixStyle('transform')
 
 export default {
   data () {
     return {
-      songReady: false
+      songReady: false,
+      currentTime: 0,
+      radius: 32
     }
+  },
+  components: {
+    ProgressBar,
+    ProgressCircle
   },
   computed: {
     ...mapState([
@@ -104,6 +131,9 @@ export default {
     },
     disableCls () {
       return this.songReady ? '' : 'disable'
+    },
+    percent () {
+      return this.currentTime / this.currentSong.duration
     }
   },
   methods: {
@@ -200,6 +230,29 @@ export default {
     },
     error () {
       this.songReady = true
+    },
+    updateTime (e) {
+      this.currentTime = e.target.currentTime
+    },
+    format (time) {
+      time = time | 0
+      let min = time / 60 | 0
+      let sec = this._pad(time % 60)
+      return `${min}:${sec}`
+    },
+    onProgressChange (percent) {
+      this.$refs.audio.currentTime = percent * this.currentSong.duration
+      if (!this.playing) {
+        this.togglePlaying()
+      }
+    },
+    _pad (num, n = 2) {
+      let len = num.toString().length
+      while (len < n) {
+        num = '0' + num
+        len++
+      }
+      return num
     },
     _getPosAndScale () {
       const targetWidth = 40
