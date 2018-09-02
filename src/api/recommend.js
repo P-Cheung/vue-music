@@ -17,9 +17,7 @@ export function getDiscList () {
   const url = '/api/getDiscList'
 
   let data = Object.assign({}, commonParams, {
-    // picmid: 1,
     rnd: Math.random(),
-    // loginUin: 0,
     hostUin: 0,
     platform: 'yqq',
     needNewCode: 0,
@@ -28,6 +26,25 @@ export function getDiscList () {
     sin: 0,
     ein: 29,
     format: 'json'
+  })
+  return axios.get(url, {
+    params: data
+  }).then(res => {
+    return Promise.resolve(res.data)
+  })
+}
+
+export function getSonglist (dissid) {
+  let url = 'api/getSonglist'
+  let data = Object.assign({}, commonParams, {
+    disstid: dissid,
+    type: 1,
+    json: 1,
+    utf8: 1,
+    onlysong: 0,
+    platform: 'yqq',
+    needNewCode: 0,
+    hostUin: 0
   })
   return axios.get(url, {
     params: data

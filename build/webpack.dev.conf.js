@@ -60,6 +60,28 @@ const devWebpackConfig = merge(baseWebpackConfig, {
         }).catch(error => {
           console.log(error)
         })
+      }),
+      app.get('/api/getSonglist', (req, res) => {
+        let url = 'https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg'
+        axios.get(url, {
+          headers: {
+            referer: 'https://y.qq.com/n/yqq/playlist/4244623545.html',
+            host: 'c.y.qq.com'
+          },
+          params: req.query
+        }).then(response => {
+          let ret = response.data
+          if (typeof ret === 'string') {
+            let reg = /^\w+\(({.+})\)$/
+            let matches = ret.match(reg)
+            if (matches) {
+              ret = JSON.parse(matches[1])
+            }
+          }
+          res.json(ret)
+        }).catch(error => {
+          console.log(error)
+        })
       })
     },
     clientLogLevel: 'warning',
