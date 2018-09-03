@@ -8,8 +8,7 @@
 import MusicList from '../music-list/music-list'
 import {mapState} from 'vuex'
 import {getCurrentToplist} from '@/api/rank'
-import {getSongVkey} from '@/api/singer'
-import {createSong} from '@/common/js/song'
+import {createSong, processSongsUrl} from '@/common/js/song'
 import {ERR_OK} from '@/api/config'
 
 export default {
@@ -48,8 +47,8 @@ export default {
           // let songlist = res.songlist.filter(item => { // 过滤付费歌曲
           //   return !item.data.pay.payplay
           // })
-          this.songs = this._normalizeSongs(res.songlist)
-          console.log(this.songs)
+          this.songs = processSongsUrl(this._normalizeSongs(res.songlist))
+          // console.log(this.songs)
         }
       })
     },
@@ -57,12 +56,9 @@ export default {
       let ret = []
       list.forEach(item => {
         let {data} = item
-        getSongVkey(data.songmid).then(res => {
-          let vkey = res.data.items[0].vkey
-          if (data.songmid && data.albumid) {
-            ret.push(createSong(data, vkey))
-          }
-        })
+        if (data.songmid && data.albumid) {
+          ret.push(createSong(data))
+        }
       })
       return ret
     }

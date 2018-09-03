@@ -6,9 +6,9 @@
 
 <script>
 import {mapState} from 'vuex'
-import {getSingerDetail, getSongVkey} from '@/api/singer'
+import {getSingerDetail} from '@/api/singer'
 import {ERR_OK} from '@/api/config'
-import {createSong} from '@/common/js/song'
+import {createSong, processSongsUrl} from '@/common/js/song'
 import MusicList from '../music-list/music-list'
 
 export default {
@@ -42,8 +42,8 @@ export default {
       }
       getSingerDetail(this.singer.id).then(res => {
         if (res.code === ERR_OK) {
-          this.songs = this._normalizeSongs(res.data.list)
-          // console.log(this.songs)
+          this.songs = processSongsUrl(this._normalizeSongs(res.data.list))
+          console.log(this.songs)
         }
       })
     },
@@ -51,12 +51,9 @@ export default {
       let ret = []
       list.forEach(item => {
         let {musicData} = item
-        getSongVkey(musicData.songmid).then(res => {
-          let vkey = res.data.items[0].vkey
-          if (musicData.songmid && musicData.albumid) {
-            ret.push(createSong(musicData, vkey))
-          }
-        })
+        if (musicData.songmid && musicData.albumid) {
+          ret.push(createSong(musicData))
+        }
       })
       return ret
     }

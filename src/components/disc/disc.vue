@@ -9,8 +9,7 @@ import MusicList from '../music-list/music-list'
 import {mapState} from 'vuex'
 import {getSonglist} from '@/api/recommend'
 import {ERR_OK} from '@/api/config'
-import {createSong} from '@/common/js/song'
-import {getSongVkey} from '@/api/singer'
+import {createSong, processSongsUrl} from '@/common/js/song'
 
 export default {
   components: {
@@ -40,19 +39,16 @@ export default {
       }
       getSonglist(this.disc.dissid).then(res => {
         if (res.code === ERR_OK) {
-          this.songs = this._normalizeSongs(res.cdlist[0].songlist)
+          this.songs = processSongsUrl(this._normalizeSongs(res.cdlist[0].songlist))
         }
       })
     },
     _normalizeSongs (list) {
       let ret = []
       list.forEach(item => {
-        getSongVkey(item.songmid).then(res => {
-          let vkey = res.data.items[0].vkey
-          if (item.albumid && item.songmid) {
-            ret.push(createSong(item, vkey))
-          }
-        })
+        if (item.albumid && item.songmid) {
+          ret.push(createSong(item))
+        }
       })
       return ret
     }

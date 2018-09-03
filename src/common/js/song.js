@@ -1,9 +1,9 @@
-import {getLyric} from '@/api/song'
+import {getLyric, getSongVkey} from '@/api/song'
 import {ERR_OK} from '@/api/config'
 import {Base64} from 'js-base64'
 
 export default class Song {
-  constructor ({id, mid, singer, name, album, duration, image}, vkey) {
+  constructor ({id, mid, singer, name, album, duration, image, url}) {
     this.id = id
     this.mid = mid
     this.singer = singer
@@ -11,7 +11,7 @@ export default class Song {
     this.album = album
     this.duration = duration
     this.image = image
-    this.url = `http://isure.stream.qqmusic.qq.com/C400${mid}.m4a?fromtag=66&guid=142762417&vkey=${vkey}`
+    this.url = url
   }
   getLyric () {
     if (this.lyric) {
@@ -30,7 +30,7 @@ export default class Song {
   }
 }
 
-export function createSong (musicData, vkey) {
+export function createSong (musicData) {
   return new Song({
     id: musicData.songid,
     mid: musicData.songmid,
@@ -38,8 +38,9 @@ export function createSong (musicData, vkey) {
     name: musicData.songname,
     album: musicData.albumname,
     duration: musicData.interval,
-    image: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${musicData.albummid}.jpg?max_age=2592000`
-  }, vkey)
+    image: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${musicData.albummid}.jpg?max_age=2592000`,
+    url: musicData.url
+  })
 }
 
 function filterSinger (singer) {
@@ -51,4 +52,14 @@ function filterSinger (singer) {
     ret.push(item.name)
   })
   return ret.join('/')
+}
+
+export function processSongsUrl (songs) {
+  songs.forEach(item => {
+    getSongVkey(item.mid).then(res => {
+      let vkey = res.data.items[0].vkey
+      item.url = `http://isure.stream.qqmusic.qq.com/C400${item.mid}.m4a?fromtag=66&guid=142762417&vkey=${vkey}`
+    })
+  })
+  return songs
 }
