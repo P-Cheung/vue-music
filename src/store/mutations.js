@@ -27,6 +27,9 @@ const mutations = {
   },
   [types.SET_CURRENT_TOPLIST] (state, toplist) {
     state.currentToplist = toplist
+  },
+  [types.SET_SEARCH_HISTORY] (state, history) {
+    state.searchHistory = history
   }
 }
 
