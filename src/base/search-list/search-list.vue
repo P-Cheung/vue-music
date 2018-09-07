@@ -1,17 +1,17 @@
 <template>
   <div class="search-list" v-show="searches.length">
-    <ul>
+    <transition-group tag="ul" name="list">
       <li class="search-item"
-          v-for="(item, index) in searches"
-          :key="index"
+          v-for="item in searches"
+          :key="item"
           @click="selectItem(item)"
-      >
+      ><!--key值为index时动画有问题-->
         <span class="text">{{item}}</span>
         <span class="icon" @click.stop="deleteOne(item)">
           <i class="icon-delete"></i>
         </span>
       </li>
-    </ul>
+    </transition-group>
   </div>
 </template>
 

@@ -117,21 +117,22 @@
 </template>
 
 <script>
-import {mapState, mapGetters, mapMutations} from 'vuex'
+import {mapState, mapMutations, mapActions} from 'vuex'
 import animations from 'create-keyframe-animation'
 import {prefixStyle} from '@/common/js/dom'
 import ProgressBar from '@/base/progress-bar/progress-bar'
 import ProgressCircle from '@/base/progress-circle/progress-circle'
 import {playMode} from '@/common/js/config'
-import {shuffle} from '@/common/js/util'
 import Lyric from 'lyric-parser'
 import Scroll from '@/base/scroll/scroll'
 import Playlist from '../playlist/playlist'
+import {playerMixin} from '@/common/js/mixin'
 
 const transform = prefixStyle('transform')
 const transitionDuration = prefixStyle('transitionDuration')
 
 export default {
+  mixins: [playerMixin],
   data () {
     return {
       songReady: false,
@@ -151,15 +152,9 @@ export default {
   },
   computed: {
     ...mapState([
-      'playlist',
       'fullScreen',
       'playing',
-      'currentIndex',
-      'mode',
-      'sequencelist'
-    ]),
-    ...mapGetters([
-      'currentSong'
+      'currentIndex'
     ]),
     playIcon () {
       return this.playing ? 'icon-pause' : 'icon-play'
@@ -173,21 +168,17 @@ export default {
     disableCls () {
       return this.songReady ? '' : 'disable'
     },
-    iconMode () {
-      return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
-    },
     percent () {
       return this.currentTime / this.currentSong.duration
     }
   },
   methods: {
     ...mapMutations({
-      setFullScreen: 'SET_FULLSCREEN',
-      setPlayingState: 'SET_PLAYING_STATE',
-      setCurrentIndex: 'SET_CURRENT_INDEX',
-      setPlayingMode: 'SET_PLAYING_MODE',
-      setPlaylist: 'SET_PLAYLIST'
+      setFullScreen: 'SET_FULLSCREEN'
     }),
+    ...mapActions([
+      'savePlayHistory'
+    ]),
     show () {
       this.$refs.playlist.show()
     },
@@ -287,6 +278,7 @@ export default {
     },
     ready () {
       this.songReady = true
+      this.savePlayHistory(this.currentSong)
     },
     error () {
       this.songReady = true
@@ -323,23 +315,6 @@ export default {
       if (this.currentLyric) {
         this.currentLyric.seek(currentTime * 1000)
       }
-    },
-    changeMode () {
-      const mode = (this.mode + 1) % 3
-      this.setPlayingMode(mode)
-      let list = []
-      if (mode === playMode.random) {
-        list = shuffle(this.sequencelist)
-      } else {
-        list = this.sequencelist
-      }
-      this.setCurrentIndex(this.getCurrentIndex(list))
-      this.setPlaylist(list)
-    },
-    getCurrentIndex (list) {
-      return list.findIndex((item) => {
-        return item.id === this.currentSong.id
-      })
     },
     getLyric () { // 获取并解析歌词
       this.currentSong.getLyric().then(res => {
